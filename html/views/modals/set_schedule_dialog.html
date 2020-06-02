@@ -1,0 +1,27 @@
+<!--
+File   : set_schedule_dialog.html
+Author : peach
+Date   : 8 July 2019
+-->
+<form name="SetScheduleDialog" class="form-horizontal" ng-submit="submit(SetScheduleDialog)">
+    <div class="modal-header">
+        <h3 class="modal-title">Set Schedule</h3>
+    </div>
+    <div class="modal-body">
+        <!-- For The ONOFF devices. -->
+        <div class="form-group" ng-if="peripheral.type == constants.PERIPHERAL_TYPE_ONOFF">
+            Choose a schedule for {{peripheral.name}}.
+        </div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label">Schedule</label>
+            <div class="col-sm-9">
+                <select class="form-control" ng-model="schedule" ng-options="s.id as s.name for s in schedules" />
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <p></p>
+            <input type="submit" class="btn btn-primary btn-sm" ng-disabled="schedule==null"value="OK" focus="true"/>
+            <input type="button" class="btn btn-default btn-sm" ng-click="cancel()" value="Cancel" />
+        </div>
+    </form>

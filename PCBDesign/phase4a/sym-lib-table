@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name tsl_assets)(type Legacy)(uri ${KIPRJMOD}/../tsl_assets.lib)(options "")(descr ""))
+)

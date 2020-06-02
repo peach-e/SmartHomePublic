@@ -1,0 +1,17 @@
+# ----------------------------------------------------------------- #
+#  File   : main.conf
+#  Author : peach
+#  Date   : 8 July 2019
+# ----------------------------------------------------------------- #
+
+USE_MOCK_GPIO   = 0
+USE_MOCK_HTTP   = 0
+USE_MOCK_LEDFAN = 0
+USE_MOCK_RF24   = 0
+
+GPIO_PIN_RB_LIGHT = 18
+
+SERIAL_DEVICE    = /dev/ttyUSB0
+SERIAL_BAUD_RATE = 9600
+
+HTTP_CRPD_IP_ADDRESS = 192.168.0.45

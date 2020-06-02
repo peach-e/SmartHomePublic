@@ -1,0 +1,43 @@
+/*
+ * Module : imageCards.css
+ * Author : Eric Peach
+ * Email  : eric.peach@gmail.com
+ * Copyright May 2017 Eric Peach
+ */
+
+.image-card-1 {
+  background-image: url('../images/background1.jpg');
+}
+.image-card-2 {
+  background-image: url('../images/background2.jpg');
+}
+.image-card-3 {
+  background-image: url('../images/background3.jpg');
+}
+.image-card-4 {
+  background-image: url('../images/background4.jpg');
+}
+.image-card-5 {
+  background-image: url('../images/background5.jpg');
+}
+.image-card-6 {
+  background-image: url('../images/background6.jpg');
+}
+.image-card-7 {
+  background-image: url('../images/background7.jpg');
+}
+.image-card-8 {
+  background-image: url('../images/background8.jpg');
+}
+.image-card-9 {
+  background-image: url('../images/background9.jpg');
+}
+.image-card-10 {
+  background-image: url('../images/background10.jpg');
+}
+.image-card-11 {
+  background-image: url('../images/background11.jpg');
+}
+.image-card-12 {
+  background-image: url('../images/background12.jpg');
+}

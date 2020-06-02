@@ -1,0 +1,4 @@
+(fp_lib_table
+  (lib (name 640456-4)(type Legacy)(uri ${KIPRJMOD}/../tsl_assets_footprints/640456-4.mod)(options "")(descr ""))
+  (lib (name tsl_assets_footprints)(type KiCad)(uri /home/peach/Development/SmartHome/PCBDesign/tsl_assets_footprints)(options "")(descr ""))
+)

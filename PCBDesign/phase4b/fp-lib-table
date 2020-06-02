@@ -1,0 +1,3 @@
+(fp_lib_table
+  (lib (name tsl_assets_footprints)(type KiCad)(uri /home/peach/Development/SmartHome/PCBDesign/tsl_assets_footprints)(options "")(descr ""))
+)

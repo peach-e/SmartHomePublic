@@ -1,0 +1,18 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP 640456-4
+F 640456-4
+$ENDCMP
+#
+$CMP MC7805CT-BP
+D Linear Voltage Regulator IC 1 Output 1.5A TO-220
+K IC REG LINEAR 5V 1.5A TO220
+F https://www.mccsemi.com/pdf/Products/MC7805CT(TO-220).pdf
+$ENDCMP
+#
+$CMP PSMN022-30PL
+D N-Channel 30V 30A (Tc) 41W (Tc) Through Hole TO-220AB
+F https://assets.nexperia.com/documents/data-sheet/PSMN022-30PL.pdf
+$ENDCMP
+#
+#End Doc Library

@@ -1,0 +1,76 @@
+/*
+ **********************************************************************
+ *  File   : main.css
+ *  Author : peach
+ *  Date   : 8 July 2019
+ **********************************************************************
+ */
+html {
+  min-height: 100%;
+}
+
+body {
+  background-color: lightgrey;
+  background: linear-gradient(darkgrey, lightgrey);
+  background-repeat: no-repeat;
+}
+
+h1 {
+  font-size: 1.9em;
+  margin-right: fill;
+  border-bottom: 1px solid black;
+}
+
+.btn-lg {
+  margin: 5px 2px;
+}
+
+.btn-start {
+  margin-left: 20%;
+  width: 60%;
+}
+
+.container {
+  background-color: #eeeeee;
+  padding-bottom: 4em;
+  min-height: 100%;
+}
+
+.container-full-width {
+  padding: 0px;
+}
+
+.footer {
+  border-top: 1px solid #6a6a6a;
+  padding-top: 1em;
+  padding-bottom: 1em;
+  color: #6a6a6a;
+}
+
+.header-image {
+  padding-top: 1em;
+  padding-bottom: 1em;
+  max-width: 65%;
+}
+
+.modal-body {
+  margin: 0 auto;
+  text-align: center;
+  padding: 15px;
+}
+
+.navbar {
+  background: linear-gradient(to bottom, #111, #222);
+  margin-bottom: 0;
+  border-radius: 0;
+}
+
+.question {
+  margin: 0 auto;
+  min-height: 5em;
+  text-align: center;
+}
+
+.question .row {
+  margin-top: 1em;
+}
