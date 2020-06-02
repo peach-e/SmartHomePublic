@@ -1,0 +1,18 @@
+db/
+virtualenv/
+conf/main\.conf
+*.log
+**/__pycache__/
+**/\.cproject
+**/\.project
+**/\.settings/
+**/app\.run
+
+# PCB Stuff
+*cache.lib
+*.sch-bak
+*.bck
+fp-info-cache
+*.kicad_pcb-bak
+*.net
+#*.dcm
