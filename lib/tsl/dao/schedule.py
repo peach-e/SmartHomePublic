@@ -10,51 +10,61 @@ import tsl.model
 import json
 
 
-def _create_schedule_from_row(row):
-    schedule_id = row[0]
-    schedule_items = get_schedule_items(schedule_id)
-    schedule = tsl.model.Schedule(
-        row[0],
-        row[1],
-        row[2],
-        schedule_items,
-        row[3],
-        row[4])
-    return schedule
+def create_schedule(schedule):
+    # Create schedule.
+    query = "INSERT INTO schedules (name, is_enabled) VALUES (?, ?)"
+    result, schedule_id = tsl.database.sqlite.execute_query(
+        query, schedule.name, schedule.is_enabled)
 
-
-def get_schedules():
-    query = 'SELECT * FROM schedules'
-    rows = tsl.database.sqlite.execute_query(query)
-
-    schedules = []
-    for row in rows:
-        schedules.append(_create_schedule_from_row(row))
-    return schedules
+    # Insert schedule items.
+    for schedule_item in schedule.schedule_items:
+        query = "INSERT INTO schedule_items (schedule_id, trigger, preset_id) VALUES (?,?,?)"
+        tsl.database.sqlite.execute_query(
+            query, schedule_id, schedule_item.trigger.convert_to_json(), schedule_item.preset_id)
+    return schedule_id
 
 
 def get_schedule(schedule_id):
-    query = 'SELECT * FROM schedules WHERE id=?'
-    rows = tsl.database.sqlite.execute_query(query, schedule_id)
-
-    if len(rows):
-        row = rows[0]
-        return _create_schedule_from_row(row)
-    else:
+    query = '''
+SELECT s.id, s.name, s.is_enabled, si.id, si.trigger, si.preset_id
+FROM schedules as s
+LEFT JOIN schedule_items as si
+ON si.schedule_id = s.id
+WHERE s.id = ?
+'''
+    result = tsl.database.sqlite.execute_query(query, schedule_id)[0]
+    if len(result) == 0:
         return None
 
+    id = result[0][0]
+    name = result[0][1]
+    is_enabled = result[0][2]
+    schedule_items = []
+    for row in result:
+        trigger = tsl.model.Trigger.create_from_json(row[4])
+        schedule_item = tsl.model.ScheduleItem(row[3], trigger, row[5])
+        schedule_items.append(schedule_item)
+    preset = tsl.model.Schedule(id, name, is_enabled, schedule_items)
 
-def get_schedule_items(schedule_id):
-    query = 'SELECT * FROM schedule_items WHERE schedule_id=?'
-    schedule_item_rows = tsl.database.sqlite.execute_query(query, schedule_id)
+    return preset
 
-    result = []
-    for row in schedule_item_rows:
-        schedule_item = tsl.model.ScheduleItem(
-            row[0],
-            tsl.model.Trigger.create_from_json(row[2]),
-            tsl.model.State.create_from_json(row[3]),
-            row[4],
-            row[5])
-        result.append(schedule_item)
-    return result
+
+def get_schedules(where_is_enabled=None):
+
+    if where_is_enabled:
+        query = 'SELECT id FROM schedules WHERE is_enabled=TRUE'
+    else:
+        query = 'SELECT id FROM schedules'
+    rows = tsl.database.sqlite.execute_query(query)[0]
+
+    schedules = []
+    for row in rows:
+        id = row[0]
+        schedules.append(get_schedule(id))
+    return schedules
+
+
+def update_schedule(schedule):
+    query = 'UPDATE schedules SET name=?, is_enabled=? WHERE id=?'
+    tsl.database.sqlite.execute_query(
+        query, schedule.name, schedule.is_enabled, schedule.id)

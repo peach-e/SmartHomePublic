@@ -1,25 +1,28 @@
 # ----------------------------------------------------------------- #
-#  File   : _pi2.py
+#  File   : rf24.py
 #  Author : peach
 #  Date   : 12 November 2019
 # ----------------------------------------------------------------- #
 
+import tsl.configuration
 import tsl.constants
 import tsl.rgb
 import tsl.util.log
 
-import RF24
+
+USE_MOCK = tsl.configuration.val('USE_MOCK_RF24')
+if USE_MOCK:
+    from tsl.hardware.mocks import RF24_lib as RF24
+else:
+    import RF24
+
 from threading import Thread
 from queue import Queue
-
-ADDRESS_BLUE = tsl.constants.RF24_NODE_ADDRESS_BLUE
-ADDRESS_GREEN = tsl.constants.RF24_NODE_ADDRESS_GREEN
-ADDRESS_RGB_BEDROOM = tsl.constants.RF24_NODE_ADDRESS_RGB_BEDROOM
-ADDRESS_RGB_DOORFRAME = tsl.constants.RF24_NODE_ADDRESS_RGB_DOORFRAME
-ADDRESS_RGB_TENSEGRITY = tsl.constants.RF24_NODE_ADDRESS_RGB_TENSEGRITY
+from time import sleep
 
 COMMAND_SET_RGB = tsl.constants.RF24_COMMAND_SET_RGB
 
+_RADIO_INTERVAL = 0.5
 _RADIO_MONITOR = None
 
 
@@ -48,6 +51,7 @@ class _RadioMonitor(Thread):
 
     def run(self):
         while not self._stop_requested:
+            sleep(_RADIO_INTERVAL)
             if not self._queue.empty():
                 self.process_request(self._queue.get())
 
@@ -68,6 +72,8 @@ class _TransmissionRequest():
         self.address = address
         self.payload = payload
 
+def _get_address_string(address):
+    return "{" + ' '.join([hex(x) for x in address]) + "}"
 
 def _initialize():
     tsl.util.log.info('Initializing RF24 Radio Interface')
@@ -76,53 +82,27 @@ def _initialize():
     _RADIO_MONITOR.start()
 
 
-def _set_discrete_level(address, level):
+def set_discrete_level(address, level):
     if not tsl.rgb.is_level_valid(level):
         tsl.util.log.error(
             'Invalid light level. Not integer between 0 and 255.')
         return 0
     request = _TransmissionRequest(address, bytes([level]))
     _RADIO_MONITOR.submit_request(request)
+
+    tsl.util.log.info(f'Setting device {_get_address_string(address)} to level {level}.')
     return 1
 
 
-def _set_rgb_level(address, r, g, b):
+def set_rgb_level(address, r, g, b):
     if not tsl.rgb.is_rgb_valid(r, g, b):
         tsl.util.log.error('Error setting RGB level.')
         return 0
 
     request = _TransmissionRequest(address, bytes([COMMAND_SET_RGB, r, g, b]))
     _RADIO_MONITOR.submit_request(request)
+
+    tsl.util.log.info(f'Setting device {_get_address_string(address)} to {r}, {g}, {b}.')
     return 1
-
-
-def set_blue_level(level):
-
-    if _set_discrete_level(ADDRESS_BLUE, level):
-        tsl.util.log.info('Setting Blue Light to {}'.format(level))
-
-
-def set_green_level(level):
-
-    if _set_discrete_level(ADDRESS_GREEN, level):
-        tsl.util.log.info('Setting Green Light to {}'.format(level))
-
-
-def set_rgb_bedroom_level(r, g, b):
-
-    if _set_rgb_level(ADDRESS_RGB_BEDROOM, r, g, b):
-        tsl.util.log.info(f'Setting Bedroom RGB Light to {r}, {g}, {b}.')
-
-
-def set_rgb_doorframe_level(r, g, b):
-
-    if _set_rgb_level(ADDRESS_RGB_DOORFRAME, r, g, b):
-        tsl.util.log.info(f'Setting Doorframe RGB Light to {r}, {g}, {b}.')
-
-
-def set_rgb_tensegrity_level(r, g, b):
-
-    if _set_rgb_level(ADDRESS_RGB_TENSEGRITY, r, g, b):
-        tsl.util.log.info(f'Setting Tensegrity RGB Light to {r}, {g}, {b}.')
 
 _initialize()

@@ -4,16 +4,18 @@
 #  Date   : 8 July 2019
 # ----------------------------------------------------------------- #
 
+import tsl.configuration
+import tsl.server.api
 import tsl.util.log
 import tsl.util.path
 import tsl.util.env
-import tsl.server.api
 
 import http.server
 import time
 import json
 
 _ROOT_DIRECTORY = tsl.util.env.get_environment_variable('APP_ROOT')
+_ENABLE_LOGGING = tsl.configuration.val('SERVER_ENABLE_LOGGING')
 
 
 class Server:
@@ -87,3 +89,8 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Content-type", api_result.mimetype)
         self.end_headers()
         self.wfile.write(api_result.data.encode())
+
+    def log_message(self, *args):
+        if (_ENABLE_LOGGING):
+            http.server.SimpleHTTPRequestHandler.log_message(self, *args)
+        return

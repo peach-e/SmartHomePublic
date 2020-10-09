@@ -23,9 +23,11 @@ _NUMBER_OF_CONNECTIONS = 0
 
 def execute_query(query, *parameters):
     handle = get_database_connection()
-    result = handle.execute(query, (*parameters,)).fetchall()
+    cur = handle.cursor()
+    result = cur.execute(query, (*parameters,)).fetchall()
+    last_row_id = cur.lastrowid
     write_and_close_connection(handle)
-    return result
+    return result, last_row_id
 
 
 def get_db_file_location():

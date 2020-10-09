@@ -32,7 +32,7 @@ SmartHome.config(function($routeProvider, $locationProvider) {
 SmartHome.controller('SandboxController', ['$scope', 'constants', 'PeripheralAPIService',
     function($scope, constants, PeripheralAPIService) {
         $scope.fire = function() {
-            PeripheralAPIService.setPeripheralState(5, {
+            PeripheralAPIService.setPeripheralState(3, {
                 level: 255
             }).then(function(result) {
                 console.log('Green Light should now be on.');
@@ -47,7 +47,7 @@ SmartHome.controller('SandboxController', ['$scope', 'constants', 'PeripheralAPI
 SmartHome.controller('PeriperalListController', ['$uibModal', '$scope', '$interval', 'constants', 'PeripheralAPIService',
     function($uibModal, $scope, $interval, constants, PeripheralAPIService) {
         $scope.peripherals = [];
-        $scope.columnNames = ['Name', 'Type', 'Mode', 'Schedule', 'State', 'Configure'];
+        $scope.columnNames = ['Name', 'Type', 'State', 'Configure'];
         $scope.refreshPeripherals = function() {
             PeripheralAPIService.getPeripherals().then(function(result) {
                 $scope.peripherals = result;
@@ -70,32 +70,6 @@ SmartHome.controller('PeriperalListController', ['$uibModal', '$scope', '$interv
                     break;
             };
             return result;
-        };
-
-        $scope.openScheduleDialog = function(peripheral) {
-            $uibModal.open({
-                templateUrl: 'html/views/modals/set_schedule_dialog.html',
-                controller: 'SetScheduleDialog',
-                size: 'md',
-                windowClass: 'popup-modal',
-                backdrop: 'static',
-                resolve: {
-                    peripheral: function() {
-                        return peripheral;
-                    },
-                    constants: function() {
-                        return constants;
-                    }
-                }
-            }).result.then(function(scheduleId) {
-                PeripheralAPIService.setPeripheralSchedule(peripheral.id, scheduleId).then(function(result) {
-                    $scope.refreshPeripherals();
-                }, function(error) {
-                    console.error(error);
-                });
-            }, function(error) {
-                console.error(error);
-            });
         };
 
         $scope.openStateDialog = function(peripheral) {
@@ -157,8 +131,16 @@ SmartHome.controller('ScheduleListController', ['$scope', '$interval', 'constant
     function($scope, $interval, constants, ScheduleAPIService) {
 
         $scope.schedules = [];
-        $scope.columnNames = ['Name', 'Type'];
+        $scope.columnNames = ['Name', 'Enabled'];
 
+        $scope.toggle = function(schedule) {
+            var newState = schedule.is_enabled ? false : true;
+            schedule.is_enabled = newState;
+            ScheduleAPIService.setScheduleEnabled(schedule.id, newState).then(function(result){
+            }, function(error) {
+                console.error(error);
+            });
+        };
         $scope.refreshSchedules = function() {
             ScheduleAPIService.getSchedules().then(function(result) {
                 $scope.schedules = result;
@@ -169,32 +151,6 @@ SmartHome.controller('ScheduleListController', ['$scope', '$interval', 'constant
 
         $interval($scope.refreshSchedules, constants.TABLE_REFRESH_RATE);
         $scope.refreshSchedules();
-    }
-]);
-
-SmartHome.controller('SetScheduleDialog', ['$scope', '$uibModalInstance', 'peripheral', 'constants', 'ScheduleAPIService',
-    function($scope, $uibModalInstance, peripheral, constants, ScheduleAPIService) {
-        $scope.constants = constants;
-        $scope.peripheral = peripheral;
-        $scope.schedules = [];
-
-
-        $scope.cancel = function() {
-            $uibModalInstance.dismiss('cancel');
-        };
-        $scope.submit = function() {
-            $uibModalInstance.close($scope.schedule);
-        };
-
-        /*
-         * Load up a list of schedules into the model on open.
-         */
-        ScheduleAPIService.getSchedules().then(function(result) {
-            $scope.schedules = result.filter((s) => s.peripheral_type === peripheral.type);
-            $scope.schedule = peripheral.schedule ? peripheral.schedule.id : $scope.schedules[0].id;
-        }, function(error) {
-            console.error(error);
-        });
     }
 ]);
 
@@ -311,8 +267,23 @@ SmartHome.factory('ScheduleAPIService', ['$http', '$q',
             return deferred.promise;
         };
 
+        function setScheduleEnabled(schedule_id, is_enabled) {
+            var payload = {
+                schedule_id: schedule_id,
+                is_enabled: is_enabled
+            };
+            var deferred = $q.defer();
+            $http.post("/api/schedule_enabled", payload).then(function(result) {
+                deferred.resolve(result.data);
+            }, function(error) {
+                deferred.reject(error);
+            });
+            return deferred.promise;
+        }
+
         return {
             getSchedules: getSchedules,
+            setScheduleEnabled: setScheduleEnabled
         };
     }
 ]);

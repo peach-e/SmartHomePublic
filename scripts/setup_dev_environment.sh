@@ -36,6 +36,7 @@ source init_environment.sh
 info "Installing Project Python Packages"
 pip install docopt
 pip install pyserial
+pip install croniter
 
 if is_raspberry_pi; then
     info "Installing Raspberry Pi-Specific Packages"
@@ -55,6 +56,8 @@ info "Copying in Git Hooks"
 hook_directory="$PROJECT_DIR/../General/Tools"
 if ( is_directory "$hook_directory" ); then
     cp $hook_directory/pre-commit.pl "$PROJECT_DIR/.git/hooks/pre-commit"
+else
+    warn "Unable to find pre-commit script in $hook_directory".
 fi
 
 info "Done"

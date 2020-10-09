@@ -36,11 +36,9 @@
 /*
  * Pin Definitions and Levels for ATTiny85
  */
-#ifdef ARDUINO_ARCH_AVR
-#define PIN_LED_R 1
-#define PIN_LED_G 3
-#define PIN_LED_B 4
-#endif
+#define TINY85_PIN_LED_R 1
+#define TINY85_PIN_LED_G 3
+#define TINY85_PIN_LED_B 4
 
 /*
  * I2C Addresses
@@ -60,11 +58,14 @@
 /*
  * RF Configuration
  */
-#define RF_ADDRESS_BLUE           { 0xdc, 0x64, 0xb6, 0xe0, 0x01 }
-#define RF_ADDRESS_GREEN          { 0xdc, 0x64, 0xb6, 0xe0, 0x02 }
+#define RF_ADDRESS_BLUE_DECOM     { 0xdc, 0x64, 0xb6, 0xe0, 0x01 }
+#define RF_ADDRESS_GREEN_DECOM    { 0xdc, 0x64, 0xb6, 0xe0, 0x02 }
 #define RF_ADDRESS_RGB_BEDROOM    { 0xdc, 0x64, 0xb6, 0xe0, 0x03 }
 #define RF_ADDRESS_RGB_DOORFRAME  { 0xdc, 0x64, 0xb6, 0xe0, 0x04 }
 #define RF_ADDRESS_RGB_TENSEGRITY { 0xdc, 0x64, 0xb6, 0xe0, 0x05 }
+#define RF_ADDRESS_RGB_KITCHEN    { 0xdc, 0x64, 0xb6, 0xe0, 0x06 }
+#define RF_ADDRESS_RGB_OFFICE_C   { 0xdc, 0x64, 0xb6, 0xe0, 0x07 }
+#define RF_ADDRESS_RGB_OFFICE_L   { 0xdc, 0x64, 0xb6, 0xe0, 0x08 }
 #define RF_PAYLOAD_SIZE  32
 
 #define RF_CMD_SET_RGBLEVEL 0x03

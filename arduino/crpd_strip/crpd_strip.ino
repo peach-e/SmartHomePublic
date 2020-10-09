@@ -17,9 +17,9 @@
 #include <TinyWire.h>
 
 // Setup LEDs
-DigitalPWM ledR(PIN_LED_R);
-DigitalPWM ledG(PIN_LED_G);
-DigitalPWM ledB(PIN_LED_B);
+DigitalPWM ledR(TINY85_PIN_LED_R);
+DigitalPWM ledG(TINY85_PIN_LED_G);
+DigitalPWM ledB(TINY85_PIN_LED_B);
 NonBlockingDelay fadeStepTimer(FADE_STEP_INTERVAL);
 
 void setup() {

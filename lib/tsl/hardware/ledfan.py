@@ -1,15 +1,21 @@
 # ----------------------------------------------------------------- #
-#  File   : _arduino.py
+#  File   : ledfan.py
 #  Author : peach
 #  Date   : 20 July 2019
 # ----------------------------------------------------------------- #
 
 # Provide the interface for arduino in real life.
 
+import tsl.configuration
 import tsl.util.log
 
-import serial
 import time
+
+USE_MOCK = tsl.configuration.val('USE_MOCK_LEDFAN')
+if USE_MOCK:
+    from tsl.hardware.mocks import Serial
+else:
+    from serial import Serial
 
 SERIAL_DEVICE = tsl.configuration.val('SERIAL_DEVICE')
 SERIAL_BAUD_RATE = tsl.configuration.val('SERIAL_BAUD_RATE')
@@ -40,7 +46,7 @@ def close():
 
 def initialize():
     global _SERIAL_HANDLE
-    _SERIAL_HANDLE = serial.Serial(SERIAL_DEVICE, SERIAL_BAUD_RATE)
+    _SERIAL_HANDLE = Serial(SERIAL_DEVICE, SERIAL_BAUD_RATE)
     time.sleep(INITIALIZATION_DELAY)
 
 

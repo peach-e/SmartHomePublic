@@ -25,11 +25,14 @@ class Worker (Thread):
         # Apply what should be immediate.
         tsl.services.apply_por_states()
 
+        # Time stamp for when we last enforced the schedules.
+        ts_schedule = None
+
         # Every so so, enforce the system.
         try:
             while not self._stop_requested:
                 time.sleep(tsl.constants.WORKER_POLL_INTERVAL)
-                tsl.services.enforce_peripheral_schedules()
+                ts_schedule = tsl.services.apply_recent_triggers(ts_schedule)
         except KeyboardInterrupt:
             pass
 

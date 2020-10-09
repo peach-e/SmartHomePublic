@@ -154,7 +154,7 @@ Notes:
 
 Steps:
 1. Wire up the ATTiny85 according to the circuit described above.
-2. Configure IDE to talk to the ESP8266.
+2. Configure IDE to talk to the ATTiny85.
     * Board: ATTiny 25/45/85
     * Processor: ATTiny85
     * Clock: 8MHz
@@ -162,3 +162,12 @@ Steps:
     * Programmer: "Arduino As ISP"
 3. Burn the bootloader and upload the sketch.
 4. Connect the ATTiny85 to the circuit.
+
+## IDE Configuration
+Once you've dialed in your IDE to use a specific configuration for, say, the ATTiny85, take a backup of the `preferences.txt` file that lives in `~/.arduino15`. Then, you can quickly resume your settings if you just open your IDE from command line like this:
+
+```
+$ arduino --preferences-file ~/.arduino15/preferences_attiny85.txt
+```
+
+for more variations, see https://github.com/arduino/Arduino/blob/master/build/shared/manpage.adoc.

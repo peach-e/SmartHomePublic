@@ -76,19 +76,6 @@ def get_peripherals(data):
     return _create_data_result(result_data)
 
 
-def post_peripheral_schedule(data):
-    result_data = []
-    peripheral_id = data['peripheral_id']
-    schedule_id = data['schedule_id']
-
-    sc = tsl.services.set_peripheral_schedule(peripheral_id, schedule_id)
-
-    if sc:
-        return _create_data_result({})
-    else:
-        return _create_400_result('Cannae update peripheral {} with schedule {}.'.format(peripheral_id, schedule_id))
-
-
 def post_peripheral_state(data):
     peripheral_id = data['peripheral_id']
     state = data['state']
@@ -133,11 +120,21 @@ def get_schedules(data):
     return _create_data_result(result_data)
 
 
+def post_schedule_enabled(data):
+    schedule_id = data['schedule_id']
+    is_enabled = data['is_enabled']
+
+    sc = tsl.services.set_schedule_enabled(schedule_id, is_enabled)
+    if sc:
+        return _create_data_result({})
+    else:
+        return _create_400_result('Failed to set enabled setting {} for schedule {}.'.format(is_enabled, schedule_id))
+
 _API_FUNCTIONS = {
     'get_peripherals': get_peripherals,
-    'post_peripheral_schedule': post_peripheral_schedule,
     'post_peripheral_state': post_peripheral_state,
     'post_preset': post_preset,
     'get_presets': get_presets,
     'get_schedules': get_schedules,
+    'post_schedule_enabled': post_schedule_enabled,
 }

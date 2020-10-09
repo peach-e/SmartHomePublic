@@ -9,34 +9,26 @@ import tsl.database.sqlite
 import tsl.rgb
 import tsl.util.exception
 
+from datetime import datetime
+from croniter import croniter
 
 import json
-import time
-
-ONE_DAY_SECONDS = 86400
 
 
 class Peripheral:
 
-    def __init__(self, id, name, uuid, peripheral_type, state, mode, schedule, created_at, updated_at):
+    def __init__(self, id, name, uuid, peripheral_type, state):
         self.id = id
         self.name = name
         self.uuid = uuid
         self.type = peripheral_type
         self.state = state
-        self.mode = mode
-        self.schedule = schedule
-        self.created_at = created_at
-        self.updated_at = updated_at
 
         state.validate(peripheral_type)
 
         if peripheral_type not in tsl.constants.PERIPHERAL_TYPES:
             raise tsl.util.exception.DataError(
                 'Unknown type {}'.format(peripheral_type))
-
-        if mode not in tsl.constants.PERIPHERAL_MODES:
-            raise tsl.util.exception.DataError('Unknown mode {}'.format(mode))
 
     def convert_to_dictionary(self):
         return {
@@ -45,18 +37,15 @@ class Peripheral:
             "uuid":       self.uuid,
             "type":       self.type,
             "state":      self.state.convert_to_dictionary(),
-            "mode":       self.mode,
-            "schedule":   self.schedule.convert_to_dictionary() if self.schedule is not None else None,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
         }
 
 
 class Preset:
 
-    def __init__(self, id, name, preset_items, nested_presets):
+    def __init__(self, id, name, is_public, preset_items, nested_presets):
         self.id = id
         self.name = name
+        self.is_public = is_public
         self.preset_items = preset_items
         self.nested_presets = nested_presets
 
@@ -64,6 +53,7 @@ class Preset:
         return {
             "id": self.id,
             "name": self.name,
+            "is_public": self.is_public,
             "preset_items": [pi.convert_to_dictionary() for pi in self.preset_items],
             "nested_presets": [np.convert_to_dictionary() for np in self.nested_presets]
         }
@@ -79,105 +69,55 @@ class Preset:
 
         # Create a new version of self that has no nested presets but all the
         # preset items.
-        return Preset(None, None, preset_items, [])
+        return Preset(None, None, None, preset_items, [])
 
 
 class PresetItem:
 
-    def __init__(self, id, preset_id, peripheral_id, mode, schedule_id=None, state=None):
+    def __init__(self, id, peripheral_id, state):
         self.id = id
-        self.preset_id = preset_id
         self.peripheral_id = peripheral_id
-        self.mode = mode
-        self.schedule_id = schedule_id
         self.state = state
-
-        # Right now we just validate that the schedule and state are defined if we need them.
-        # They will be further validated if we try to actually use this preset item to modify
-        # a peripheral's state.
-        if mode not in tsl.constants.PERIPHERAL_MODES:
-            raise tsl.util.exception.DataError('Unknown mode {}'.format(mode))
-
-        if mode == tsl.constants.PERIPHERAL_MODE_SCHEDULED and schedule_id is None:
-            raise tsl.util.exception.DataError(
-                'Invalid Schedule ID for Preset Item {}.'.format(id))
-
-        if mode == tsl.constants.PERIPHERAL_MODE_FIXED and state is None:
-            raise tsl.util.exception.DataError(
-                'Invalid State for Preset Item {}.'.format(id))
 
     def convert_to_dictionary(self):
         return {
             "id": self.id,
-            "preset_id": self.preset_id,
             "peripheral_id": self.peripheral_id,
-            "mode": self.mode,
-            "schedule_id": self.schedule_id,
-            "state": self.state.convert_to_dictionary() if self.state else None
+            "state": self.state.convert_to_dictionary()
         }
 
 
 class Schedule:
 
-    def __init__(self, id, name, peripheral_type, schedule_items, created_at, updated_at):
+    def __init__(self, id, name, is_enabled, schedule_items):
         self.id = id
         self.name = name
-        self.peripheral_type = peripheral_type
+        self.is_enabled = is_enabled
         self.schedule_items = schedule_items
-        self.created_at = created_at
-        self.updated_at = updated_at
-
-        if peripheral_type not in tsl.constants.PERIPHERAL_TYPES:
-            raise tsl.util.exception.DataError(
-                'Unknown type {}'.format(peripheral_type))
-
-        for schedule_item in schedule_items:
-            schedule_item.state.validate(peripheral_type)
 
     def convert_to_dictionary(self):
         return {
             "id": self.id,
             "name": self.name,
-            "peripheral_type": self.peripheral_type,
+            "is_enabled": self.is_enabled,
             "schedule_items": [item.convert_to_dictionary() for item in self.schedule_items],
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
         }
-
-    def validate(self, peripheral_type):
-
-        is_valid = False
-
-        try:
-            # Schedule's peripheral type should match the normal type.
-            assert self.peripheral_type == peripheral_type
-            is_valid = True
-        except:
-            pass
-
-        if not is_valid:
-            raise tsl.util.exception.DataError(
-                'Invalid Schedule {} for peripheral type {}'.format(self, peripheral_type))
 
 
 class ScheduleItem:
 
-    def __init__(self, id, trigger, state, created_at, updated_at):
+    def __init__(self, id, trigger, preset_id):
         self.id = id
         self.trigger = trigger
-        self.state = state
-        self.created_at = created_at
-        self.updated_at = updated_at
+        self.preset_id = preset_id
 
         trigger.validate()
 
     def convert_to_dictionary(self):
         return {
-            "id":         self.id,
-            "trigger":    self.trigger.convert_to_dictionary(),
-            "state":      self.state.convert_to_dictionary(),
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
+            "id":        self.id,
+            "trigger":   self.trigger.convert_to_dictionary(),
+            "preset_id": self.preset_id
         }
 
 
@@ -189,6 +129,9 @@ class State:
         self.r = r
         self.g = g
         self.b = b
+
+        assert ((enabled is not None) or (level is not None) or
+                (r is not None and g is not None and b is not None))
 
     def _get_defined_attributes(self):
         result = []
@@ -251,27 +194,26 @@ class State:
 
 class Trigger:
 
-    def __init__(self, hour=None, minute=None, second=None):
+    def __init__(self, hour=None, minute=None):
         self.hour = hour
         self.minute = minute
-        self.second = second
+        self.validate()
 
     def create_from_dictionary(dictionary):
         hour = dictionary.get('hour')
         minute = dictionary.get('minute')
-        second = dictionary.get('second')
 
-        return Trigger(hour, minute, second)
+        return Trigger(hour, minute)
 
     def create_from_json(json_str):
         return Trigger.create_from_dictionary(json.loads(json_str))
 
     def convert_to_dictionary(self):
         result = {}
-        for key in ['hour', 'minute', 'second']:
-            attr = getattr(self, key)
-            if attr is not None:
-                result[key] = attr
+        if self.hour is not None:
+            result['hour'] = self.hour
+        if self.minute is not None:
+            result['minute'] = self.minute
         return result
 
     def convert_to_json(self):
@@ -280,7 +222,20 @@ class Trigger:
     def validate(self):
         h = self.hour
         m = self.minute
-        s = self.second
 
-        if [h, m, s] == [None, None, None]:
-            raise tsl.util.exception.DataError('Invalid Trigger'.format(mode))
+        if [h, m] == [None, None]:
+            raise tsl.util.exception.DataError('Invalid Trigger')
+
+        try:
+            self.get_next(datetime.now())
+        except:
+            raise tsl.util.exception.DataError('Invalid Trigger')
+
+    def get_next(self, reference_timestamp):
+        h = str(self.hour) if self.hour is not None else '*'
+        m = str(self.minute) if self.minute is not None else '*'
+
+        cron_string = f'{m} {h} * * *'
+        next_occurrence = croniter(
+            cron_string, reference_timestamp).get_next(datetime)
+        return next_occurrence

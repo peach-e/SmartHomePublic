@@ -7,78 +7,95 @@
 import tsl.database.sqlite
 import tsl.model
 
-MAX_NESTING_RECURSION = 5
+_MAX_NESTING_RECURSION = 5
 
 #
 # Private
 #
 
 
-def _get_preset_name(preset_id):
-    query = 'SELECT * FROM presets WHERE id=?'
-    rows = tsl.database.sqlite.execute_query(query, preset_id)
-    if not len(rows):
-        return None
-    return rows[0][1]
-
-
-def _get_preset(preset_id, nested_recursion=int(0)):
-    assert nested_recursion < MAX_NESTING_RECURSION
-
-    # First, get the name and in doing so, make sure that the
-    # preset even exists.
-    preset_name = _get_preset_name(preset_id)
-    if preset_name is None:
-        return None
-
-    # Get Preset Items
-    preset_items = _get_preset_items(preset_id)
-
-    # Get Nested Presets
-    nested_presets = []
-    nested_preset_ids = _get_nested_preset_ids(preset_id)
-    for nested_preset_id in nested_preset_ids:
-        nested_presets.append(_get_preset(nested_preset_id, nested_recursion + 1))
-
-    # now build the object.
-    preset = tsl.model.Preset(preset_id, preset_name, preset_items, nested_presets)
-    return preset
-
-
 def _get_nested_preset_ids(preset_id):
     query = 'SELECT nested_preset_id FROM nested_presets WHERE preset_id = ?'
-    results = tsl.database.sqlite.execute_query(query, preset_id)
+    results = tsl.database.sqlite.execute_query(query, preset_id)[0]
     return [r[0] for r in results]
 
 
-def _get_preset_items(preset_id):
-    query = 'SELECT * FROM preset_items WHERE preset_id=?'
-    result = tsl.database.sqlite.execute_query(query, preset_id)
+def _get_preset(preset_id, recursion):
+    if recursion > _MAX_NESTING_RECURSION:
+        raise tsl.util.exception.DataError(
+            'Maximum recursion encountered while getting presets.')
+    recursion += 1
 
+    query = '''
+SELECT p.id, p.name, p.is_public, pi.id, pi.peripheral_id, pi.state
+FROM presets as p
+LEFT JOIN preset_items as pi
+ON pi.preset_id = p.id
+WHERE p.id = ?
+'''
+    result = tsl.database.sqlite.execute_query(query, preset_id)[0]
+    if len(result) == 0:
+        return None
+
+    id = result[0][0]
+    name = result[0][1]
+    is_public = result[0][2]
     preset_items = []
     for row in result:
-        state_str = row[5]
-        state = tsl.model.State.create_from_json(state_str) if (state_str is not None) else None
-        preset_item = tsl.model.PresetItem(row[0], row[1], row[2], row[3], row[4], state)
+        preset_item_id = row[3]
+        if preset_item_id is None:
+            # Terrible hack because SQLITE will apparently return results in query
+            # where the ON condition clearly fails.
+            continue
+        state = tsl.model.State.create_from_json(row[5])
+        preset_item = tsl.model.PresetItem(row[3], row[4], state)
         preset_items.append(preset_item)
-    return preset_items
+
+    nested_presets = [_get_preset(npid, recursion)
+                      for npid in _get_nested_preset_ids(id)]
+    preset = tsl.model.Preset(
+        id, name, is_public, preset_items, nested_presets)
+
+    return preset
+
 #
 # Public
 #
 
+# Create a preset, but does not account for nested presets yet.
+
+
+def associate_nested_preset(parent_id, child_id):
+    query = 'INSERT INTO nested_presets (preset_id, nested_preset_id) VALUES (?,?)'
+    result, association_id = tsl.database.sqlite.execute_query(
+        query, parent_id, child_id)
+    return association_id
+
+
+def create_preset(preset):
+    # Create the preset
+    query = 'INSERT INTO presets (name, is_public) VALUES (?,?)'
+    result, preset_id = tsl.database.sqlite.execute_query(
+        query, preset.name, preset.is_public)
+
+    # Create the preset items.
+    for preset_item in preset.preset_items:
+        query = 'INSERT INTO preset_items (preset_id, peripheral_id, state) VALUES (?,?,?)'
+        tsl.database.sqlite.execute_query(
+            query, preset_id, preset_item.peripheral_id, preset_item.state.convert_to_json())
+    return preset_id
+
 
 def get_preset(preset_id):
-    preset = _get_preset(preset_id)
-    return preset
+    return _get_preset(preset_id, 0)
 
 
-def get_presets():
-    query = 'SELECT * FROM presets'
-    preset_rows = tsl.database.sqlite.execute_query(query)
+def get_public_presets():
+    query = 'SELECT id FROM presets WHERE is_public=TRUE'
+    rows = tsl.database.sqlite.execute_query(query)[0]
 
     presets = []
-    for row in preset_rows:
+    for row in rows:
         id = row[0]
-        name = row[1]
-        presets.append(_get_preset(id))
+        presets.append(get_preset(id))
     return presets

@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------- #
-#  File   : _pi2.py
+#  File   : gpio.py
 #  Author : peach
 #  Date   : 8 July 2019
 # ----------------------------------------------------------------- #
@@ -10,7 +10,13 @@ import tsl.configuration
 import tsl.util.log
 
 import time
-import RPi.GPIO as GPIO
+
+USE_MOCK = tsl.configuration.val('USE_MOCK_GPIO')
+if USE_MOCK:
+    from tsl.hardware.mocks import GPIO
+else:
+    import RPi.GPIO as GPIO
+
 
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)

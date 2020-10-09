@@ -16,7 +16,7 @@
 #include <nRF24L01.h>
 #include <RF24.h>
 
-const byte rxAddr[] = RF_ADDRESS_GREEN;
+const byte rxAddr[] = RF_ADDRESS_GREEN_DECOM;
 
 /*
  * The radio, the light and the function to set its brightness.

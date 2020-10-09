@@ -10,12 +10,6 @@ import tsl.database.sqlite
 
 
 def _create_peripheral_from_row(row):
-    schedule_id = row[6]
-    if schedule_id is not None:
-        schedule = tsl.dao.schedule.get_schedule(schedule_id)
-    else:
-        schedule = None
-
     state = tsl.model.State.create_from_json(row[4])
 
     peripheral = tsl.model.Peripheral(
@@ -23,18 +17,26 @@ def _create_peripheral_from_row(row):
         row[1],
         row[2],
         row[3],
-        state,
-        row[5],
-        schedule,
-        row[7],
-        row[6])
+        state)
 
     return peripheral
 
 
+def create_peripheral(peripheral):
+    query = "INSERT INTO peripherals (name, uuid, type, state) VALUES (?,?,?,?)"
+    result, peripheral_id = tsl.database.sqlite.execute_query(query,
+                                                              peripheral.name,
+                                                              peripheral.uuid,
+                                                              peripheral.type,
+                                                              peripheral.state.convert_to_json(),
+                                                              )
+
+    return peripheral_id
+
+
 def get_peripheral(peripheral_id):
     query = 'SELECT * FROM peripherals WHERE id=?'
-    result_rows = tsl.database.sqlite.execute_query(query, peripheral_id)
+    result_rows = tsl.database.sqlite.execute_query(query, peripheral_id)[0]
 
     if not len(result_rows):
         return None
@@ -45,7 +47,7 @@ def get_peripheral(peripheral_id):
 
 def get_peripherals():
     query = 'SELECT * FROM peripherals'
-    peripheral_rows = tsl.database.sqlite.execute_query(query)
+    peripheral_rows = tsl.database.sqlite.execute_query(query)[0]
 
     result = []
     for row in peripheral_rows:
@@ -60,17 +62,13 @@ UPDATE peripherals
 SET  name        = ?,
      uuid        = ?,
      type        = ?,
-     state       = ?,
-     mode        = ?,
-     schedule_id = ?
-    WHERE id = ?
+     state       = ?
+WHERE id = ?
 """
     tsl.database.sqlite.execute_query(query,
                                       peripheral.name,
                                       peripheral.uuid,
                                       peripheral.type,
                                       peripheral.state.convert_to_json(),
-                                      peripheral.mode,
-                                      peripheral.schedule.id if peripheral.schedule is not None else None,
                                       peripheral.id
                                       )

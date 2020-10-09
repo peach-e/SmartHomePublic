@@ -20,6 +20,28 @@ Date   : 8 July 2019
             </div>
         </div>
         <!--
+        Schedules
+        -->
+        <div class='row'>
+            <h1>Schedules</h1>
+            <div ng-controller="ScheduleListController">
+                <table class="table table-condensed" ng-if="schedules.length">
+                    <thead>
+                        <tr>
+                            <th ng-repeat="colName in columnNames">{{colName}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="s in schedules">
+                            <td>{{s.name}}</td>
+                            <td><input type="checkbox" ng-checked="s.is_enabled" ng-click="toggle(s)"/></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <span ng-if="!schedules.length">No Schedules Found.</span>
+            </div>
+        </div>
+        <!--
         Peripherals
         -->
         <div class='row'>
@@ -35,40 +57,15 @@ Date   : 8 July 2019
                         <tr ng-repeat="p in peripherals">
                             <td>{{p.name}}</td>
                             <td>{{p.type}}</td>
-                            <td>{{p.mode}}</td>
-                            <td>{{p.schedule.name}}</td>
                             <td>{{getHumanReadableState(p)}}</td>
                             <td>
                                 <!--<button class="form-group btn btn-small btn-danger" ng-click="disablePeripheral(p)" ng-hide="p.mode=='DISABLED'">Disable</button>-->
-                                <button class="form-group btn btn-small btn-primary" ng-click="openScheduleDialog(p)">Set Schedule</button>
                                 <button class="form-group btn btn-small btn-primary" ng-click="openStateDialog(p)">Set State</button>
                             </td>
                         </tr>
                     </tbody>
                 </table>
                 <span ng-if="!peripherals.length">No Peripherals Found.</span>
-            </div>
-        </div>
-        <!--
-        Schedules
-        -->
-        <div class='row'>
-            <h1>Schedules</h1>
-            <div ng-controller="ScheduleListController">
-                <table class="table table-condensed" ng-if="schedules.length">
-                    <thead>
-                        <tr>
-                            <th ng-repeat="colName in columnNames">{{colName}}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr ng-repeat="s in schedules">
-                            <td>{{s.name}}</td>
-                            <td>{{s.peripheral_type}}</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <span ng-if="!schedules.length">No Schedules Found.</span>
             </div>
         </div>
     </div>

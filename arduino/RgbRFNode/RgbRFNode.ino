@@ -18,7 +18,7 @@
 #include <nRF24L01.h>
 #include <RF24.h>
 
-const byte rxAddr[] = RF_ADDRESS_RGB_TENSEGRITY;
+const byte rxAddr[] = RF_ADDRESS_RGB_OFFICE_C;
 
 /*
  * The radio, the light and the function to set its brightness.
@@ -74,7 +74,9 @@ void loop() {
     addFadeJob(channelB->getPower(), desiredB, NUMBER_FADE_STEPS, setB);
 
     #if SERIAL_DEBUG
-      Serial.println(desiredBrightness);
+      Serial.println(desiredR);
+      Serial.println(desiredG);
+      Serial.println(desiredB);
     #endif /*SERIAL_DEBUG*/
   }
 
